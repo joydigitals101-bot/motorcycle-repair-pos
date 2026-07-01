@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Motorcycle Repair POS</title>
+    <link rel="stylesheet" href="css/pos.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div>
+          <p class="eyebrow">Laptop POS</p>
+          <h1>Motorcycle Repair Shop</h1>
+          <p class="sidebar-copy">Manage parts inventory, repair jobs, and sales from one simple screen.</p>
+        </div>
+
+        <nav class="nav-list" aria-label="POS sections">
+          <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+          <button class="nav-btn" data-view="products">Products</button>
+          <button class="nav-btn" data-view="customers">Customers</button>
+          <button class="nav-btn" data-view="orders">New Repair Order</button>
+          <button class="nav-btn" data-view="reports">Reports</button>
+        </nav>
+
+        <div class="sidebar-card">
+          <h2>Quick tip</h2>
+          <p>Add a few real sample products first so the store feels familiar before you import the full catalog.</p>
+        </div>
+      </aside>
+
+      <main class="main-panel">
+        <section id="dashboard-view" class="view active">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Overview</p>
+              <h2>Daily operations</h2>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <article class="stat-card">
+              <p class="stat-label">Products</p>
+              <h3 id="products-count">0</h3>
+            </article>
+            <article class="stat-card">
+              <p class="stat-label">Low stock</p>
+              <h3 id="low-stock-count">0</h3>
+            </article>
+            <article class="stat-card">
+              <p class="stat-label">Repair orders</p>
+              <h3 id="orders-count">0</h3>
+            </article>
+            <article class="stat-card">
+              <p class="stat-label">Sales today</p>
+              <h3 id="sales-total">0</h3>
+            </article>
+          </div>
+
+          <div class="panel-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <h3>Low stock products</h3>
+              </div>
+              <ul id="low-stock-list" class="list"></ul>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <h3>Upcoming maintenance reminders</h3>
+              </div>
+              <ul id="upcoming-reminders-list" class="list"></ul>
+            </section>
+          </div>
+        </section>
+
+        <section id="products-view" class="view">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Inventory</p>
+              <h2>Products</h2>
+            </div>
+            <button class="primary-btn" id="show-product-form">Add product</button>
+          </div>
+
+          <form id="product-form" class="card form-card hidden">
+            <div class="form-grid">
+              <label>
+                Product name
+                <input type="text" id="product-name" required />
+              </label>
+              <label>
+                Category
+                <input type="text" id="product-category" list="category-list" required />
+                <datalist id="category-list"></datalist>
+              </label>
+              <label>
+                Stock
+                <input type="number" id="product-stock" min="0" required />
+              </label>
+              <label>
+                Cost price
+                <input type="number" id="product-cost" min="0" step="0.01" required />
+              </label>
+              <label>
+                Selling price
+                <input type="number" id="product-price" min="0" step="0.01" required />
+              </label>
+              <label>
+                SKU / code
+                <input type="text" id="product-sku" />
+              </label>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="primary-btn">Save product</button>
+              <button type="button" class="secondary-btn" id="cancel-product-form">Cancel</button>
+            </div>
+          </form>
+
+          <div class="card">
+            <div class="panel-header">
+              <h3>Categories</h3>
+              <button type="button" class="secondary-btn" id="add-category-btn">Add category</button>
+            </div>
+            <div class="tag-list" id="category-chip-list"></div>
+          </div>
+
+          <div class="card">
+            <div class="table-toolbar">
+              <input type="search" id="product-search" placeholder="Search by name, code, or category" />
+              <select id="product-filter">
+                <option value="all">All categories</option>
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Code</th>
+                    <th>Category</th>
+                    <th>Stock</th>
+                    <th>Cost</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="product-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="orders-view" class="view">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Sales</p>
+              <h2>New repair order</h2>
+            </div>
+          </div>
+
+          <div class="card">
+            <form id="order-form">
+              <div class="form-grid order-grid">
+                <label>
+                  Customer name
+                  <input type="text" id="order-customer" required />
+                </label>
+                <label>
+                  Phone
+                  <input type="text" id="order-phone" />
+                </label>
+                <label>
+                  Vehicle brand
+                  <input type="text" id="order-vehicle-brand" />
+                </label>
+                <label>
+                  Model
+                  <input type="text" id="order-vehicle-model" />
+                </label>
+                <label>
+                  Year
+                  <input type="number" id="order-vehicle-year" />
+                </label>
+                <label>
+                  Plate / VIN
+                  <input type="text" id="order-vehicle-id" />
+                </label>
+              </div>
+              <label class="full-width">
+                Problem / service note
+                <textarea id="order-note" rows="3"></textarea>
+              </label>
+              <label class="full-width">
+                Maintenance reminder (months)
+                <input type="number" id="reminder-interval" min="1" max="24" value="1" />
+              </label>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="form-grid add-item-grid">
+              <label>
+                Add service
+                <select id="service-select"></select>
+              </label>
+              <label>
+                Service qty
+                <input type="number" id="service-quantity" min="1" value="1" />
+              </label>
+              <button type="button" class="primary-btn" id="add-service-btn">Add service</button>
+            </div>
+            <div class="form-grid add-item-grid">
+              <label>
+                Add product
+                <select id="product-select"></select>
+              </label>
+              <label>
+                Product qty
+                <input type="number" id="product-quantity" min="1" value="1" />
+              </label>
+              <button type="button" class="primary-btn" id="add-product-btn">Add product</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Unit price</th>
+                    <th>Line total</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="order-items-body"></tbody>
+              </table>
+            </div>
+
+            <div class="summary-box">
+              <div>
+                <p>Subtotal</p>
+                <strong id="subtotal-value">0.00</strong>
+              </div>
+              <div>
+                <p>Tax</p>
+                <strong id="tax-value">0.00</strong>
+              </div>
+              <div>
+                <p>Total</p>
+                <strong id="total-value">0.00</strong>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <label>
+                Tax rate (%)
+                <input type="number" id="tax-rate" min="0" max="100" value="8" />
+              </label>
+              <button type="button" class="primary-btn" id="save-order-btn">Save repair order</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="customers-view" class="view">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Customers</p>
+              <h2>Customer records and reminders</h2>
+            </div>
+          </div>
+
+          <div class="card">
+            <form id="customer-form">
+              <div class="form-grid order-grid">
+                <label>
+                  Customer name
+                  <input type="text" id="customer-name" required />
+                </label>
+                <label>
+                  Phone
+                  <input type="text" id="customer-phone" />
+                </label>
+                <label>
+                  Vehicle brand
+                  <input type="text" id="customer-brand" />
+                </label>
+                <label>
+                  Model
+                  <input type="text" id="customer-model" />
+                </label>
+                <label>
+                  Year
+                  <input type="number" id="customer-year" />
+                </label>
+                <label>
+                  Plate / VIN
+                  <input type="text" id="customer-plate" />
+                </label>
+              </div>
+              <label class="full-width">
+                Reminder interval (months)
+                <input type="number" id="customer-reminder-interval" min="1" max="24" value="1" />
+              </label>
+              <label class="full-width">
+                Reminder note
+                <textarea id="customer-reminder-note" rows="2"></textarea>
+              </label>
+              <div class="form-actions">
+                <button type="submit" class="primary-btn">Save customer</button>
+                <button type="button" class="secondary-btn" id="clear-customer-form">Clear</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Customer</th>
+                    <th>Vehicle</th>
+                    <th>Phone</th>
+                    <th>Next reminder</th>
+                    <th>Interval</th>
+                    <th>Status</th>
+                    <th>Note</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="customer-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="panel-header">
+              <h3>Selected customer</h3>
+            </div>
+            <div id="customer-detail-card" class="detail-card"></div>
+          </div>
+
+          <div class="card">
+            <div class="panel-header">
+              <h3>Service history</h3>
+            </div>
+            <ul id="customer-history-list" class="history-list"></ul>
+          </div>
+        </section>
+
+        <section id="reports-view" class="view">
+          <div class="page-header">
+            <div>
+              <p class="eyebrow">Reports</p>
+              <h2>Inventory and sales</h2>
+            </div>
+          </div>
+
+          <div class="panel-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <h3>Low stock</h3>
+              </div>
+              <ul id="report-low-stock" class="list"></ul>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <h3>Recent sales</h3>
+              </div>
+              <ul id="report-orders" class="list"></ul>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="js/pos.js"></script>
+  </body>
+</html>
