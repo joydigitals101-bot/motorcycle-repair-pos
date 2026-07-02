@@ -3,17 +3,17 @@ const STORAGE_KEY = 'motorcycle-pos-demo';
 const defaultState = {
   categories: ['Brakes', 'Fluids', 'Electrical', 'Engine', 'Maintenance'],
   products: [
-    { id: crypto.randomUUID(), name: 'Brake Pad Set', category: 'Brakes', stock: 12, cost: 35, price: 55, sku: 'BP-01' },
-    { id: crypto.randomUUID(), name: 'Engine Oil 10W-40', category: 'Fluids', stock: 8, cost: 18, price: 26, sku: 'OIL-10' },
-    { id: crypto.randomUUID(), name: 'Motorcycle Battery', category: 'Electrical', stock: 5, cost: 72, price: 99, sku: 'BAT-01' },
-    { id: crypto.randomUUID(), name: 'Air Filter', category: 'Engine', stock: 4, cost: 21, price: 34, sku: 'AF-01' },
-    { id: crypto.randomUUID(), name: 'Chain Lube', category: 'Maintenance', stock: 15, cost: 7, price: 12, sku: 'CL-01' }
+    { id: crypto.randomUUID(), name: 'Brake Pad Set', category: 'Brakes', stock: 12, cost: 550, price: 850, sku: 'BP-01' },
+    { id: crypto.randomUUID(), name: 'Engine Oil 10W-40', category: 'Fluids', stock: 8, cost: 220, price: 320, sku: 'OIL-10' },
+    { id: crypto.randomUUID(), name: 'Motorcycle Battery', category: 'Electrical', stock: 5, cost: 2200, price: 2800, sku: 'BAT-01' },
+    { id: crypto.randomUUID(), name: 'Air Filter', category: 'Engine', stock: 4, cost: 250, price: 400, sku: 'AF-01' },
+    { id: crypto.randomUUID(), name: 'Chain Lube', category: 'Maintenance', stock: 15, cost: 120, price: 180, sku: 'CL-01' }
   ],
   services: [
-    { id: crypto.randomUUID(), name: 'Oil Change', price: 60 },
-    { id: crypto.randomUUID(), name: 'Brake Inspection', price: 40 },
-    { id: crypto.randomUUID(), name: 'Full Service', price: 120 },
-    { id: crypto.randomUUID(), name: 'Diagnostic Check', price: 55 }
+    { id: crypto.randomUUID(), name: 'Oil Change', price: 250 },
+    { id: crypto.randomUUID(), name: 'Brake Inspection', price: 150 },
+    { id: crypto.randomUUID(), name: 'Full Service', price: 1200 },
+    { id: crypto.randomUUID(), name: 'Diagnostic Check', price: 350 }
   ],
   customers: [],
   orders: [],
@@ -208,7 +208,10 @@ function bindOrderActions() {
     const selected = state.products.find((product) => product.id === productSelect.value);
     if (!selected) return;
     const qty = Number(productQuantity.value) || 1;
-    if (qty > selected.stock) {
+    const alreadyInCart = state.currentOrderItems
+      .filter((item) => item.type === 'product' && item.productId === selected.id)
+      .reduce((sum, item) => sum + item.qty, 0);
+    if (alreadyInCart + qty > selected.stock) {
       alert('Not enough stock for that item.');
       return;
     }
@@ -304,7 +307,7 @@ function bindOrderActions() {
     saveState();
     render();
     document.getElementById('order-form').reset();
-    taxRateInput.value = '8';
+    taxRateInput.value = '12';
     renderOrderItems();
 
     if (confirm('Repair order saved. Print receipt now?')) {
@@ -337,7 +340,11 @@ function renderStats() {
   const lowStock = state.products.filter((product) => product.stock <= 5);
   document.getElementById('low-stock-count').textContent = lowStock.length;
   document.getElementById('orders-count').textContent = state.orders.length;
-  const salesToday = state.orders.reduce((sum, order) => sum + order.total, 0);
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const salesToday = state.orders
+    .filter((order) => new Date(order.createdAt) >= startOfToday)
+    .reduce((sum, order) => sum + order.total, 0);
   document.getElementById('sales-total').textContent = formatCurrency(salesToday);
 
   const lowStockList = document.getElementById('low-stock-list');
@@ -661,7 +668,7 @@ function formatDate(value) {
 }
 
 function formatCurrency(value) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value);
 }
 
 taxRateInput.addEventListener('input', updateTotals);
@@ -745,7 +752,7 @@ function buildReceiptHTML(order) {
       <tbody>${itemsRows}</tbody>
     </table>
     <p>Subtotal: ${formatCurrency(order.subtotal)}</p>
-    <p>Tax: ${formatCurrency(order.tax)}</p>
+    <p>VAT: ${formatCurrency(order.tax)}</p>
     <p class="receipt-total">Total: ${formatCurrency(order.total)}</p>
     <p>Next maintenance reminder: ${order.reminderDate ? formatDate(order.reminderDate) : '—'}</p>
   `;
