@@ -27,6 +27,16 @@
           <h2>Quick tip</h2>
           <p>Add a few real sample products first so the store feels familiar before you import the full catalog.</p>
         </div>
+
+        <div class="sidebar-card">
+          <h2>Backup</h2>
+          <p>Save all your data to a file, or restore from a previous backup.</p>
+          <div class="sidebar-actions">
+            <button type="button" class="secondary-btn" id="export-backup-btn">Export backup</button>
+            <label class="secondary-btn file-label" for="import-backup-input">Import backup</label>
+            <input type="file" id="import-backup-input" accept="application/json" class="hidden" />
+          </div>
+        </div>
       </aside>
 
       <main class="main-panel">
@@ -260,6 +270,7 @@
                 <input type="number" id="tax-rate" min="0" max="100" value="8" />
               </label>
               <button type="button" class="primary-btn" id="save-order-btn">Save repair order</button>
+              <button type="button" class="secondary-btn" id="print-last-receipt-btn">Print last receipt</button>
             </div>
           </div>
         </section>
@@ -316,6 +327,9 @@
           </div>
 
           <div class="card">
+            <div class="table-toolbar">
+              <input type="search" id="customer-search" placeholder="Search by name, phone, or vehicle" />
+            </div>
             <div class="table-wrap">
               <table>
                 <thead>
@@ -376,6 +390,8 @@
         </section>
       </main>
     </div>
+
+    <div id="print-receipt"></div>
 
     <script src="js/pos.js"></script>
   </body>

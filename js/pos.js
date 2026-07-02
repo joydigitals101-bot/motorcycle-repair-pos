@@ -42,6 +42,7 @@ const taxValue = document.getElementById('tax-value');
 const totalValue = document.getElementById('total-value');
 const taxRateInput = document.getElementById('tax-rate');
 const saveOrderBtn = document.getElementById('save-order-btn');
+const printLastReceiptBtn = document.getElementById('print-last-receipt-btn');
 const customerForm = document.getElementById('customer-form');
 const customerTableBody = document.getElementById('customer-table-body');
 const customerHistoryList = document.getElementById('customer-history-list');
@@ -58,6 +59,7 @@ function init() {
   bindProductForm();
   bindCustomerForm();
   bindOrderActions();
+  bindBackupActions();
   render();
 }
 
@@ -304,7 +306,14 @@ function bindOrderActions() {
     document.getElementById('order-form').reset();
     taxRateInput.value = '8';
     renderOrderItems();
-    alert('Repair order saved.');
+
+    if (confirm('Repair order saved. Print receipt now?')) {
+      printReceipt(order);
+    }
+  });
+
+  printLastReceiptBtn.addEventListener('click', () => {
+    printReceipt(state.orders[0]);
   });
 
   productSearch.addEventListener('input', renderProducts);
@@ -626,8 +635,18 @@ function renderReports() {
 
   state.orders.slice(0, 6).forEach((order) => {
     const item = document.createElement('li');
-    item.textContent = `${order.customer} — ${formatCurrency(order.total)} — ${new Date(order.createdAt).toLocaleString()}`;
+    item.innerHTML = `
+      <span>${order.customer} — ${formatCurrency(order.total)} — ${new Date(order.createdAt).toLocaleString()}</span>
+      <button type="button" class="icon-btn" data-print-order-id="${order.id}">Print</button>
+    `;
     reportOrders.appendChild(item);
+  });
+
+  reportOrders.querySelectorAll('[data-print-order-id]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const order = state.orders.find((entry) => entry.id === button.dataset.printOrderId);
+      printReceipt(order);
+    });
   });
 }
 
@@ -646,3 +665,102 @@ function formatCurrency(value) {
 }
 
 taxRateInput.addEventListener('input', updateTotals);
+
+function bindBackupActions() {
+  document.getElementById('export-backup-btn').addEventListener('click', exportBackup);
+
+  document.getElementById('import-backup-input').addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    importBackup(file);
+    event.target.value = '';
+  });
+}
+
+function exportBackup() {
+  const dataStr = JSON.stringify(state, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `pos-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function importBackup(file) {
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    let parsed;
+    try {
+      parsed = JSON.parse(event.target.result);
+    } catch {
+      alert('Could not read that file. Make sure it is a valid backup JSON file.');
+      return;
+    }
+
+    if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.products)) {
+      alert('That file does not look like a POS backup.');
+      return;
+    }
+
+    if (!confirm('This will replace all current data with the backup. Continue?')) return;
+
+    state = {
+      ...JSON.parse(JSON.stringify(defaultState)),
+      ...parsed,
+      currentOrderItems: []
+    };
+    saveState();
+    render();
+    alert('Backup restored.');
+  };
+  reader.readAsText(file);
+}
+
+function buildReceiptHTML(order) {
+  const itemsRows = order.items.map((item) => `
+    <tr>
+      <td>${item.name}</td>
+      <td>${item.qty}</td>
+      <td>${formatCurrency(item.unitPrice)}</td>
+      <td>${formatCurrency(item.qty * item.unitPrice)}</td>
+    </tr>
+  `).join('');
+
+  return `
+    <h2>Motorcycle Repair Shop</h2>
+    <p>Repair order receipt</p>
+    <p>Date: ${new Date(order.createdAt).toLocaleString()}</p>
+    <p>Customer: ${order.customer}</p>
+    <p>Phone: ${order.phone || '—'}</p>
+    <p>Vehicle: ${order.vehicle || '—'}</p>
+    ${order.note ? `<p>Note: ${order.note}</p>` : ''}
+    <table>
+      <thead>
+        <tr><th>Item</th><th>Qty</th><th>Unit price</th><th>Line total</th></tr>
+      </thead>
+      <tbody>${itemsRows}</tbody>
+    </table>
+    <p>Subtotal: ${formatCurrency(order.subtotal)}</p>
+    <p>Tax: ${formatCurrency(order.tax)}</p>
+    <p class="receipt-total">Total: ${formatCurrency(order.total)}</p>
+    <p>Next maintenance reminder: ${order.reminderDate ? formatDate(order.reminderDate) : '—'}</p>
+  `;
+}
+
+function printReceipt(order) {
+  if (!order) {
+    alert('No repair order to print yet. Save one first.');
+    return;
+  }
+  document.getElementById('print-receipt').innerHTML = buildReceiptHTML(order);
+  document.body.classList.add('printing-receipt');
+  window.print();
+}
+
+window.addEventListener('afterprint', () => {
+  document.body.classList.remove('printing-receipt');
+});
